@@ -1,4 +1,6 @@
 export declare const auth: import("better-auth").Auth<{
+    baseURL: string | undefined;
+    secret: string | undefined;
     database: (options: import("better-auth").BetterAuthOptions) => import("better-auth").DBAdapter<import("better-auth").BetterAuthOptions>;
     plugins: [{
         id: "admin";

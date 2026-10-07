@@ -1,4 +1,4 @@
-import express from "express";
+import express, { ErrorRequestHandler } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -6,50 +6,34 @@ import path from "path";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./utils/auth.js";
 
+
 import sliderRoutes from "./routes/slider.route.js";
 import newsRoutes from "./routes/news.route.js";
 import { galleryRoutes } from "./routes/gallery.route.js";
 import contactRoutes from "./routes/contact.route.js";
 import agentRoutes from "./routes/agentform.route.js";
-import hajjahRoutes from './routes/hajjah.route.js'
+import hajjahRoutes from "./routes/hajjah.route.js";
+import { allowedOrigins } from "./utils/origins.js";
 
 const app = express();
 
-// Allowed fixed origins
-const allowedOrigins = [
-  "https://travel-agance-hojj-umrah.vercel.app",
-  "http://localhost:3000",
-  "http://localhost:3001",
-  process.env.FRONTEND_URL,
-].filter(Boolean) as string[];
-
-// CORS Config Function (সব Vercel Preview + Production Domain সাপোর্ট করার জন্য)
+// CORS: shudhu apnar frontend (env: FRONTEND_URL) ar localhost.
+// Ager moto "*.vercel.app" shobai ke allow kora hoyni, karon credentials shoho
+// jekono vercel.app site theke request pathano jeto.
 const corsConfig = cors({
   origin: (origin, callback) => {
-    // 1. Postman/Server-to-Server request (origin না থাকলে)
-    // 2. Allowed list-এ থাকলে
-    // 3. Vercel-এর যেকোনো dynamic deployment URL (.vercel.app) হলে allow করবে
-    if (
-      !origin ||
-      allowedOrigins.includes(origin) ||
-      origin.endsWith(".vercel.app")
-    ) {
+    // Origin na thakle (Postman / server-to-server) allow
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Accept",
-  ],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 });
 
-// Apply CORS & Handle Preflight Requests
 app.use(corsConfig);
 app.options("/*path", corsConfig);
 
@@ -60,22 +44,44 @@ app.use(
 );
 app.use(morgan("dev"));
 
-// Auth route — named wildcard (Express 5 / path-to-regexp এর জন্য)
+// Health check (deploy thik hoyeche kina dekhar jonno)
+app.get("/", (_req, res) => {
+  res.json({ ok: true, service: "travel-agence-server" });
+});
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true });
+});
+
+// Auth route (Express 5 named wildcard)
 app.all("/api/auth/*path", toNodeHandler(auth));
 
-// JSON parser (auth এর পরে)
+// JSON parser (auth er pore)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
+// Vercel e disk e file thake na (chobi Cloudinary te), tai ei route shudhu local e kaje lage
 app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 
-// Other routes
+// Routes
 app.use("/api/sliders", sliderRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/agents", agentRoutes);
 app.use("/api/hajjah", hajjahRoutes);
+
+// Shob error JSON hishebe ferot dey (multer / CORS / onno error)
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  console.error("Unhandled error:", err);
+
+  if (err?.code === "LIMIT_FILE_SIZE") {
+    res.status(400).json({ error: "Chobir size 2MB er beshi hote pabe na" });
+    return;
+  }
+
+  const status = typeof err?.status === "number" ? err.status : 500;
+  res.status(status).json({ error: err?.message || "Server error" });
+};
+app.use(errorHandler);
 
 export default app;
