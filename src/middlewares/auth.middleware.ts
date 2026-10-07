@@ -8,7 +8,7 @@ export interface AuthRequest extends Request {
     agentId?: string | null;
 }
 
-/** শুধু admin বা agent (সাধারণ "user" রোল ঢুকতে পারবে না) */
+/** শুধু admin বা agent */
 export const requireAuth = async (
     req: AuthRequest,
     res: Response,
@@ -31,7 +31,6 @@ export const requireAuth = async (
 
         req.user = { id: session.user.id, role };
 
-        // Agent হলে agentId বসিয়ে দিন
         if (role === "agent") {
             const agent = await prisma.agent.findUnique({
                 where: { userId: session.user.id },
@@ -79,3 +78,4 @@ export const requireAdmin = async (
         return res.status(401).json({ error: "Unauthorized" });
     }
 };
+
