@@ -7,6 +7,22 @@ generator client {
 }
 
 // =====================================================
+// ENUMS
+// =====================================================
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PaymentRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// =====================================================
 // AUTH (better-auth)
 // =====================================================
 
@@ -23,11 +39,12 @@ model User {
   createdAt     DateTime
   updatedAt     DateTime
 
-  sessions        Session[]
-  accounts        Account[]
-  agent           Agent? // এক user = এক agent
-  contactMessages ContactMessage[]
-  reviewedHajjahs Hajjah[] @relation("HajjahReviewer")
+  sessions                Session[]
+  accounts                Account[]
+  agent                   Agent?
+  contactMessages         ContactMessage[]
+  reviewedHajjahs         Hajjah[]         @relation("HajjahReviewer")
+  reviewedPaymentRequests PaymentRequest[] @relation("PaymentReviewer")
 
   @@map("user")
 }
@@ -143,12 +160,6 @@ model ContactMessage {
 // AGENT + HAJJAH
 // =====================================================
 
-enum RegistrationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model Agent {
   id                String   @id @default(uuid())
   name              String
@@ -167,28 +178,26 @@ model Agent {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  // এক User = এক Agent
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  hajjahs Hajjah[]
+  hajjahs         Hajjah[]
+  paymentRequests PaymentRequest[]
 }
 
 model Hajjah {
   id   String @id @default(uuid())
   slNo Int    @unique @default(autoincrement())
 
-  // ---------- Review ----------
   status       RegistrationStatus @default(PENDING)
   reviewedById String?
   reviewedBy   User?              @relation("HajjahReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   reviewedAt   DateTime?
   rejectReason String?
 
-  // ---------- Personal ----------
   name             String
   fathersName      String
-  mothersName      String? 
+  mothersName      String?
   dob              DateTime @db.Date
   gender           String   @default("Female")
   maritalStatus    String   @default("Married")
@@ -200,19 +209,16 @@ model Hajjah {
   permanentAddress String?
   photo            String?
 
-  // ---------- Passport ----------
   passportNo         String    @unique
   passportIssueDate  DateTime? @db.Date
   passportExpiry     DateTime  @db.Date
   passportIssuePlace String?
 
-  // ---------- Mahram ----------
   mahramName       String?
   mahramRelation   String?
   mahramMobile     String?
   mahramPassportNo String?
 
-  // ---------- Health & Emergency ----------
   bloodGroup               String  @default("O+")
   medicalConditions        String?
   meningitisVaccine        Boolean @default(false)
@@ -220,14 +226,12 @@ model Hajjah {
   emergencyContactRelation String  @default("Relative")
   emergencyContactPhone    String
 
-  // ---------- Travel ----------
   travelDate        DateTime? @db.Date
   roomType          String    @default("Quad")
   previousHajj      Boolean   @default(false)
   specialAssistance String?
   notes             String?
 
-  // ---------- Package & Payment ----------
   packageType   String  @default("Economy")
   totalAmount   Int     @default(0)
   paidAmount    Int     @default(0)
@@ -236,9 +240,10 @@ model Hajjah {
   transactionId String?
   referredBy    String?
 
-  // ---------- Agent (কে রেজিস্টার করেছে) ----------
   agentId String?
   agent   Agent?  @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  paymentRequests PaymentRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -247,5 +252,39 @@ model Hajjah {
   @@index([mobileNo])
   @@index([status])
   @@index([agentId])
+  @@index([createdAt])
+}
+
+// =====================================================
+// PAYMENT REQUEST
+// =====================================================
+
+model PaymentRequest {
+  id String @id @default(uuid())
+
+  hajjahId String
+  hajjah   Hajjah @relation(fields: [hajjahId], references: [id], onDelete: Cascade)
+
+  agentId String?
+  agent   Agent?  @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  amount        Int
+  method        String
+  paymentNumber String?
+  transactionId String?
+  note          String?
+
+  status       PaymentRequestStatus @default(PENDING)
+  reviewedById String?
+  reviewedBy   User?                @relation("PaymentReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  rejectReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hajjahId])
+  @@index([agentId])
+  @@index([status])
   @@index([createdAt])
 }

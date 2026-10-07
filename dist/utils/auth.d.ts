@@ -906,12 +906,8 @@ export declare const auth: import("better-auth").Auth<{
             enabled: false;
         };
         defaultCookieAttributes: {
-            sameSite: "lax";
+            sameSite: "none";
             secure: true;
-            httpOnly: true;
-        } | {
-            sameSite: "lax";
-            secure: false;
             httpOnly: true;
         };
     };

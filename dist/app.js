@@ -5,13 +5,14 @@ import morgan from "morgan";
 import path from "path";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./utils/auth.js";
+import { allowedOrigins } from "./utils/origins.js";
 import sliderRoutes from "./routes/slider.route.js";
 import newsRoutes from "./routes/news.route.js";
 import { galleryRoutes } from "./routes/gallery.route.js";
 import contactRoutes from "./routes/contact.route.js";
 import agentRoutes from "./routes/agentform.route.js";
 import hajjahRoutes from "./routes/hajjah.route.js";
-import { allowedOrigins } from "./utils/origins.js";
+import paymentRoutes from "./routes/Payment.route.js";
 const app = express();
 // CORS: shudhu apnar frontend (env: FRONTEND_URL) ar localhost.
 // Ager moto "*.vercel.app" shobai ke allow kora hoyni, karon credentials shoho
@@ -57,6 +58,7 @@ app.use("/api/gallery", galleryRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/agents", agentRoutes);
 app.use("/api/hajjah", hajjahRoutes);
+app.use("/api/payments", paymentRoutes);
 // Shob error JSON hishebe ferot dey (multer / CORS / onno error)
 const errorHandler = (err, _req, res, _next) => {
     console.error("Unhandled error:", err);

@@ -316,16 +316,19 @@ export const agentFormController = {
                         email: agent.user.email,
                         password: String(password),
                     },
-                    returnHeaders: true,
-                });
+                    asResponse: true,
+                }) as any;
                 signInHeaders = result.headers;
-            } catch {
+            } catch (err: any) {
+                console.error("signInEmail error:", err);
                 return res.status(401).json({ error: "Password bhul" });
             }
 
             // Session cookie browser e pathano (eta na korle hajjah list e 401 ashbe)
-            const cookies = signInHeaders.getSetCookie();
-            if (cookies.length) res.setHeader("Set-Cookie", cookies);
+            if (signInHeaders && typeof signInHeaders.getSetCookie === "function") {
+                const cookies = signInHeaders.getSetCookie();
+                if (cookies.length) res.setHeader("Set-Cookie", cookies);
+            }
 
             return res.status(200).json({
                 success: true,

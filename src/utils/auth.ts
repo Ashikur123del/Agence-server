@@ -39,17 +39,11 @@ export const auth = betterAuth({
       enabled: false,
     },
     // Rewrite দিয়ে same-origin হলে lax + secure যথেষ্ট
-    defaultCookieAttributes: isProd
-      ? {
-        sameSite: "lax",
-        secure: true,
-        httpOnly: true,
-      }
-      : {
-        sameSite: "lax",
-        secure: false,
-        httpOnly: true,
-      },
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
   },
 
   databaseHooks: {
