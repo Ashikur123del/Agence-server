@@ -1,0 +1,52 @@
+export type HajjahStatus = "PENDING" | "APPROVED" | "REJECTED";
+export interface Hajjah {
+    name: string;
+    fathersName: string;
+    mothersName?: string | null;
+    dob: Date;
+    gender?: string;
+    maritalStatus?: string;
+    nidNo: string;
+    mobileNo: string;
+    whatsappNo?: string | null;
+    district?: string | null;
+    presentAddress: string;
+    permanentAddress?: string | null;
+    photo?: string;
+    passportNo: string;
+    passportIssueDate?: Date | null;
+    passportExpiry: Date;
+    passportIssuePlace?: string | null;
+    mahramName?: string | null;
+    mahramRelation?: string | null;
+    mahramMobile?: string | null;
+    mahramPassportNo?: string | null;
+    bloodGroup?: string;
+    medicalConditions?: string | null;
+    meningitisVaccine?: boolean;
+    emergencyContactName: string;
+    emergencyContactRelation?: string;
+    emergencyContactPhone: string;
+    travelDate?: Date | null;
+    roomType?: string;
+    previousHajj?: boolean;
+    specialAssistance?: string | null;
+    notes?: string | null;
+    packageType?: string;
+    totalAmount?: number;
+    paidAmount?: number;
+    paymentMethod?: string;
+    paymentNumber?: string | null;
+    transactionId?: string | null;
+    referredBy?: string | null;
+    agentId?: string | null;
+}
+export interface HajjahFilter {
+    name?: string;
+    mobileNo?: string;
+    search?: string;
+    status?: HajjahStatus;
+    page?: number;
+    limit?: number;
+    agentId?: string;
+}

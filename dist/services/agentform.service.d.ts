@@ -1,0 +1,176 @@
+export declare const agentFormService: {
+    getAllAgents(): Promise<({
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            emailVerified: boolean;
+            image: string | null;
+            role: string | null;
+            banned: boolean | null;
+            banReason: string | null;
+            banExpires: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+    } & {
+        id: string;
+        name: string;
+        fathersName: string;
+        mobileNo: string;
+        whatsAppNumber: string | null;
+        bkashNumber: string | null;
+        bankAccountNumber: string | null;
+        presentAddress: string;
+        permanentAddress: string;
+        emergencyName: string;
+        emergencyRelation: string;
+        emergencyMobile: string;
+        emergencyAddress: string;
+        photo: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string | null;
+    })[]>;
+    getAgentById(id: string): Promise<({
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            emailVerified: boolean;
+            image: string | null;
+            role: string | null;
+            banned: boolean | null;
+            banReason: string | null;
+            banExpires: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+    } & {
+        id: string;
+        name: string;
+        fathersName: string;
+        mobileNo: string;
+        whatsAppNumber: string | null;
+        bkashNumber: string | null;
+        bankAccountNumber: string | null;
+        presentAddress: string;
+        permanentAddress: string;
+        emergencyName: string;
+        emergencyRelation: string;
+        emergencyMobile: string;
+        emergencyAddress: string;
+        photo: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string | null;
+    }) | null>;
+    findByMobile(mobileNo: string): Promise<{
+        id: string;
+        name: string;
+        fathersName: string;
+        mobileNo: string;
+        whatsAppNumber: string | null;
+        bkashNumber: string | null;
+        bankAccountNumber: string | null;
+        presentAddress: string;
+        permanentAddress: string;
+        emergencyName: string;
+        emergencyRelation: string;
+        emergencyMobile: string;
+        emergencyAddress: string;
+        photo: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string | null;
+    } | null>;
+    findByMobileWithUser(mobileNo: string): Promise<({
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            emailVerified: boolean;
+            image: string | null;
+            role: string | null;
+            banned: boolean | null;
+            banReason: string | null;
+            banExpires: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+    } & {
+        id: string;
+        name: string;
+        fathersName: string;
+        mobileNo: string;
+        whatsAppNumber: string | null;
+        bkashNumber: string | null;
+        bankAccountNumber: string | null;
+        presentAddress: string;
+        permanentAddress: string;
+        emergencyName: string;
+        emergencyRelation: string;
+        emergencyMobile: string;
+        emergencyAddress: string;
+        photo: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string | null;
+    }) | null>;
+    createAgentWithUser(data: {
+        agent: Record<string, any>;
+        userId: string;
+    }): Promise<{
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            emailVerified: boolean;
+            image: string | null;
+            role: string | null;
+            banned: boolean | null;
+            banReason: string | null;
+            banExpires: Date | null;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+    } & {
+        id: string;
+        name: string;
+        fathersName: string;
+        mobileNo: string;
+        whatsAppNumber: string | null;
+        bkashNumber: string | null;
+        bankAccountNumber: string | null;
+        presentAddress: string;
+        permanentAddress: string;
+        emergencyName: string;
+        emergencyRelation: string;
+        emergencyMobile: string;
+        emergencyAddress: string;
+        photo: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string | null;
+    }>;
+    updateAgent(id: string, data: Record<string, any>): Promise<{
+        id: string;
+        name: string;
+        fathersName: string;
+        mobileNo: string;
+        whatsAppNumber: string | null;
+        bkashNumber: string | null;
+        bankAccountNumber: string | null;
+        presentAddress: string;
+        permanentAddress: string;
+        emergencyName: string;
+        emergencyRelation: string;
+        emergencyMobile: string;
+        emergencyAddress: string;
+        photo: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string | null;
+    }>;
+    deleteAgent(id: string): Promise<void>;
+};
