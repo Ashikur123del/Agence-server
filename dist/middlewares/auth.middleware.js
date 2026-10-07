@@ -1,7 +1,7 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../utils/auth.js";
 import { prisma } from "../config/database.js";
-/** শুধু admin বা agent */
+/** শুধু admin বা agent (সাধারণ "user" রোল ঢুকতে পারবে না) */
 export const requireAuth = async (req, res, next) => {
     try {
         const session = await auth.api.getSession({
@@ -15,6 +15,7 @@ export const requireAuth = async (req, res, next) => {
             return res.status(403).json({ error: "Not allowed" });
         }
         req.user = { id: session.user.id, role };
+        // Agent হলে agentId বসিয়ে দিন
         if (role === "agent") {
             const agent = await prisma.agent.findUnique({
                 where: { userId: session.user.id },

@@ -38,9 +38,10 @@ export const auth = betterAuth({
     crossSubDomainCookies: {
       enabled: false,
     },
+    // Rewrite দিয়ে same-origin হলে lax + secure যথেষ্ট
     defaultCookieAttributes: isProd
       ? {
-        sameSite: "none",
+        sameSite: "lax",
         secure: true,
         httpOnly: true,
       }
