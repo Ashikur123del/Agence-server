@@ -1,57 +1,77 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../utils/auth.js";
 import { prisma } from "../config/database.js";
-/** শুধু admin বা agent (সাধারণ "user" রোল ঢুকতে পারবে না) */
 export const requireAuth = async (req, res, next) => {
     try {
         const session = await auth.api.getSession({
             headers: fromNodeHeaders(req.headers),
         });
         if (!session) {
-            return res.status(401).json({ error: "Login dorkar" });
+            return res.status(401).json({
+                error: "Please log in",
+            });
         }
         const role = session.user.role;
         if (role !== "agent" && role !== "admin") {
-            return res.status(403).json({ error: "Not allowed" });
+            return res.status(403).json({
+                error: "Not allowed",
+            });
         }
-        req.user = { id: session.user.id, role };
-        // Agent হলে agentId বসিয়ে দিন
+        req.user = {
+            id: session.user.id,
+            role,
+        };
         if (role === "agent") {
             const agent = await prisma.agent.findUnique({
-                where: { userId: session.user.id },
-                select: { id: true },
+                where: {
+                    userId: session.user.id,
+                },
+                select: {
+                    id: true,
+                },
             });
-            req.agentId = agent?.id ?? null;
-            if (!req.agentId) {
-                return res.status(403).json({ error: "Agent profile pai nai" });
+            if (!agent) {
+                return res.status(403).json({
+                    error: "Agent profile not found",
+                });
             }
+            req.agentId = agent.id;
         }
-        next();
+        return next();
     }
     catch (error) {
-        console.error("Auth error:", error);
-        return res.status(401).json({ error: "Unauthorized" });
+        console.error("Authentication error:", error);
+        return res.status(401).json({
+            error: "Unauthorized",
+        });
     }
 };
-/** শুধু Admin */
 export const requireAdmin = async (req, res, next) => {
     try {
         const session = await auth.api.getSession({
             headers: fromNodeHeaders(req.headers),
         });
         if (!session) {
-            return res.status(401).json({ error: "Login dorkar" });
+            return res.status(401).json({
+                error: "Please log in",
+            });
         }
-        const role = session.user.role;
-        if (role !== "admin") {
-            return res.status(403).json({ error: "Shudhu Admin ei kaj korte pare" });
+        if (session.user.role !== "admin") {
+            return res.status(403).json({
+                error: "Admin access required",
+            });
         }
-        req.user = { id: session.user.id, role };
-        next();
+        req.user = {
+            id: session.user.id,
+            role: session.user.role,
+        };
+        return next();
     }
     catch (error) {
-        console.error("Auth error:", error);
-        return res.status(401).json({ error: "Unauthorized" });
+        console.error("Authentication error:", error);
+        return res.status(401).json({
+            error: "Unauthorized",
+        });
     }
 };
 //# sourceMappingURL=auth.middleware.js.map

@@ -1,6 +1,6 @@
 export declare const auth: import("better-auth").Auth<{
-    baseURL: string | undefined;
-    secret: string | undefined;
+    baseURL: string;
+    secret: string;
     database: (options: import("better-auth").BetterAuthOptions) => import("better-auth").DBAdapter<import("better-auth").BetterAuthOptions>;
     plugins: [{
         id: "admin";
@@ -906,9 +906,10 @@ export declare const auth: import("better-auth").Auth<{
             enabled: false;
         };
         defaultCookieAttributes: {
-            sameSite: "lax";
+            sameSite: "lax" | "none";
             secure: boolean;
             httpOnly: true;
+            path: string;
         };
     };
     databaseHooks: {

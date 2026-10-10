@@ -1,8 +1,10 @@
+
 import express, { ErrorRequestHandler } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
+
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./utils/auth.js";
 import { allowedOrigins } from "./utils/origins.js";
@@ -17,52 +19,67 @@ import paymentRoutes from "./routes/Payment.route.js";
 
 const app = express();
 
-// CORS: shudhu apnar frontend (env: FRONTEND_URL) ar localhost.
-// Ager moto "*.vercel.app" shobai ke allow kora hoyni, karon credentials shoho
-// jekono vercel.app site theke request pathano jeto.
 const corsConfig = cors({
-  origin: (origin, callback) => {
-    // Origin na thakle (Postman / server-to-server) allow
+  origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Not allowed by CORS: ${origin}`));
+      return callback(null, true);
     }
+
+    return callback(
+      new Error(`Not allowed by CORS: ${origin}`)
+    );
   },
+
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
 });
 
 app.use(corsConfig);
-app.options("/*path", corsConfig);
+app.options(/.*/, corsConfig);
 
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
   })
 );
+
 app.use(morgan("dev"));
 
-// Health check (deploy thik hoyeche kina dekhar jonno)
 app.get("/", (_req, res) => {
-  res.json({ ok: true, service: "travel-agence-server" });
+  res.json({
+    ok: true,
+    service: "travel-agence-server",
+  });
 });
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-// Auth route (Express 5 named wildcard)
+// Better Auth
 app.all("/api/auth/*path", toNodeHandler(auth));
 
-// JSON parser (auth er pore)
+// Request parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Vercel e disk e file thake na (chobi Cloudinary te), tai ei route shudhu local e kaje lage
-app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
+// Local uploaded files
+app.use(
+  "/uploads",
+  express.static(
+    path.join(process.cwd(), "public/uploads")
+  )
+);
 
-// Routes
+// API routes
 app.use("/api/sliders", sliderRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/gallery", galleryRoutes);
@@ -71,18 +88,29 @@ app.use("/api/agents", agentRoutes);
 app.use("/api/hajjah", hajjahRoutes);
 app.use("/api/payments", paymentRoutes);
 
-// Shob error JSON hishebe ferot dey (multer / CORS / onno error)
-const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+const errorHandler: ErrorRequestHandler = (
+  err,
+  _req,
+  res,
+  _next
+) => {
   console.error("Unhandled error:", err);
 
   if (err?.code === "LIMIT_FILE_SIZE") {
-    res.status(400).json({ error: "Chobir size 2MB er beshi hote pabe na" });
+    res.status(400).json({
+      error: "Image size cannot exceed 2MB",
+    });
     return;
   }
 
-  const status = typeof err?.status === "number" ? err.status : 500;
-  res.status(status).json({ error: err?.message || "Server error" });
+  const status =
+    typeof err?.status === "number" ? err.status : 500;
+
+  res.status(status).json({
+    error: err?.message || "Server error",
+  });
 };
+
 app.use(errorHandler);
 
 export default app;

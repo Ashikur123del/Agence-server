@@ -5,6 +5,12 @@ import { prisma } from "../config/database.js";
 import { allowedOrigins } from "./origins.js";
 const isProd = process.env.NODE_ENV === "production";
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL ?? "asikk2925@gmail.com").toLowerCase();
+if (!process.env.BETTER_AUTH_SECRET) {
+    throw new Error("BETTER_AUTH_SECRET is missing");
+}
+if (!process.env.BETTER_AUTH_URL) {
+    throw new Error("BETTER_AUTH_URL is missing");
+}
 export const auth = betterAuth({
     baseURL: process.env.BETTER_AUTH_URL,
     secret: process.env.BETTER_AUTH_SECRET,
@@ -21,8 +27,8 @@ export const auth = betterAuth({
         enabled: true,
     },
     session: {
-        expiresIn: 60 * 60 * 24 * 7, // 7 days
-        updateAge: 60 * 60 * 24, // 1 day
+        expiresIn: 60 * 60 * 24 * 7,
+        updateAge: 60 * 60 * 24,
     },
     trustedOrigins: allowedOrigins,
     advanced: {
@@ -31,9 +37,10 @@ export const auth = betterAuth({
             enabled: false,
         },
         defaultCookieAttributes: {
-            sameSite: "lax",
+            sameSite: isProd ? "none" : "lax",
             secure: isProd,
             httpOnly: true,
+            path: "/",
         },
     },
     databaseHooks: {
@@ -41,7 +48,12 @@ export const auth = betterAuth({
             create: {
                 before: async (user) => {
                     if (user.email?.toLowerCase() === ADMIN_EMAIL) {
-                        return { data: { ...user, role: "admin" } };
+                        return {
+                            data: {
+                                ...user,
+                                role: "admin",
+                            },
+                        };
                     }
                     return { data: user };
                 },

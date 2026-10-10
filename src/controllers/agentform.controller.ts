@@ -293,42 +293,76 @@ export const agentFormController = {
     },
 
     // POST /api/agents/verify  (mobile + password diye login)
+
     async verifyAgent(req: Request, res: Response) {
         try {
-            const { mobileNo, password } = req.body;
-            if (!mobileNo || !password) {
-                return res.status(400).json({ error: "Mobile number and password required" });
+            const { mobileNo, password } = req.body ?? {};
+
+            if (
+                typeof mobileNo !== "string" ||
+                typeof password !== "string" ||
+                !mobileNo.trim() ||
+                !password
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Mobile number and password are required",
+                });
             }
 
-            const agent = await agentFormService.findByMobileWithUser(String(mobileNo).trim());
+            const normalizedMobile = mobileNo.replace(/\D/g, "");
+
+            const agent =
+                await agentFormService.findByMobileWithUser(
+                    normalizedMobile
+                );
+
             if (!agent) {
-                return res.status(404).json({ error: "Agent pawa jay nai" });
-            }
-            if (!agent.user || !agent.user.email) {
-                return res.status(403).json({ error: "Agent account link nai" });
-            }
-
-            // better-auth diye password check + session toiri
-            let signInHeaders: Headers;
-            try {
-                const result = await auth.api.signInEmail({
-                    body: {
-                        email: agent.user.email,
-                        password: String(password),
-                    },
-                    asResponse: true,
-                }) as any;
-                signInHeaders = result.headers;
-            } catch (err: any) {
-                console.error("signInEmail error:", err);
-                return res.status(401).json({ error: "Password bhul" });
+                return res.status(401).json({
+                    success: false,
+                    error: "Invalid mobile number or password",
+                });
             }
 
-            // Session cookie browser e pathano (eta na korle hajjah list e 401 ashbe)
-            if (signInHeaders && typeof signInHeaders.getSetCookie === "function") {
-                const cookies = signInHeaders.getSetCookie();
-                if (cookies.length) res.setHeader("Set-Cookie", cookies);
+            if (!agent.user?.email) {
+                return res.status(403).json({
+                    success: false,
+                    error: "Agent account is not linked",
+                });
             }
+
+            if (agent.user.role !== "agent") {
+                return res.status(403).json({
+                    success: false,
+                    error: "This account is not an active agent account",
+                });
+            }
+
+            // Better Auth দিয়ে password যাচাই ও session তৈরি
+            const result = await auth.api.signInEmail({
+                body: {
+                    email: agent.user.email,
+                    password,
+                },
+                asResponse: true,
+            });
+
+            // Better Auth-এর Set-Cookie header সংগ্রহ
+            const cookies = result.headers.getSetCookie();
+
+            if (cookies.length === 0) {
+                console.error(
+                    "Agent login: Better Auth did not return Set-Cookie"
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    error: "Login session cookie could not be created",
+                });
+            }
+
+            // Better Auth-এর session cookies Browser-এ পাঠানো
+            res.setHeader("Set-Cookie", cookies);
 
             return res.status(200).json({
                 success: true,
@@ -340,8 +374,26 @@ export const agentFormController = {
                 },
             });
         } catch (error: any) {
+            // ভুল password বা sign-in failure
+            if (
+                error?.status === 401 ||
+                error?.statusCode === 401 ||
+                error?.body?.code === "INVALID_EMAIL_OR_PASSWORD" ||
+                error?.body?.code === "INVALID_PASSWORD"
+            ) {
+                return res.status(401).json({
+                    success: false,
+                    error: "Invalid mobile number or password",
+                });
+            }
+
             console.error("verifyAgent error:", error);
-            return res.status(500).json({ error: error?.message || "Verification failed" });
+
+            return res.status(500).json({
+                success: false,
+                error: "Agent login failed. Please try again.",
+            });
         }
     },
+
 };
