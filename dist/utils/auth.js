@@ -21,7 +21,7 @@ export const auth = betterAuth({
         enabled: true,
     },
     session: {
-        expiresIn: 60 * 60 * 24 * 7, // 7 days
+        expiresIn: 60 * 60 * 24 * 7,
         updateAge: 60 * 60 * 24, // 1 day
     },
     trustedOrigins: allowedOrigins,
@@ -30,7 +30,6 @@ export const auth = betterAuth({
         crossSubDomainCookies: {
             enabled: false,
         },
-        // Rewrite দিয়ে same-origin হলে lax + secure যথেষ্ট
         defaultCookieAttributes: {
             sameSite: "none",
             secure: true,
