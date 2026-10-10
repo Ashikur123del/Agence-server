@@ -8,5 +8,4 @@ export interface AuthRequest extends Request {
 }
 /** শুধু admin বা agent (সাধারণ "user" রোল ঢুকতে পারবে না) */
 export declare const requireAuth: (req: AuthRequest, res: Response, next: NextFunction) => Promise<Response<any, Record<string, any>> | undefined>;
-/** শুধু Admin */
 export declare const requireAdmin: (req: AuthRequest, res: Response, next: NextFunction) => Promise<Response<any, Record<string, any>> | undefined>;

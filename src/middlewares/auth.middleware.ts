@@ -51,7 +51,6 @@ export const requireAuth = async (
     }
 };
 
-/** শুধু Admin */
 export const requireAdmin = async (
     req: AuthRequest,
     res: Response,

@@ -33,7 +33,6 @@ export const requireAuth = async (req, res, next) => {
         return res.status(401).json({ error: "Unauthorized" });
     }
 };
-/** শুধু Admin */
 export const requireAdmin = async (req, res, next) => {
     try {
         const session = await auth.api.getSession({
