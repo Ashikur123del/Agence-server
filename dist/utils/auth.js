@@ -27,18 +27,20 @@ export const auth = betterAuth({
         enabled: true,
     },
     session: {
-        expiresIn: 60 * 60 * 24 * 7,
-        updateAge: 60 * 60 * 24,
+        expiresIn: 60 * 60 * 24 * 7, // 7 days
+        updateAge: 60 * 60 * 24, // 1 day
     },
     trustedOrigins: allowedOrigins,
     advanced: {
+        // Production-এ secure cookie, local-এ plain
         useSecureCookies: isProd,
         crossSubDomainCookies: {
             enabled: false,
         },
         defaultCookieAttributes: {
+            // Cross-origin (Vercel frontend ↔ backend) এর জন্য none
             sameSite: isProd ? "none" : "lax",
-            secure: isProd,
+            secure: isProd, // sameSite: "none" হলে secure বাধ্যতামূলক
             httpOnly: true,
             path: "/",
         },

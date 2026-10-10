@@ -287,16 +287,22 @@ export const agentFormController = {
                 },
                 asResponse: true,
             });
-            // Better Auth-এর Set-Cookie header সংগ্রহ
-            const cookies = result.headers.getSetCookie();
-            if (cookies.length === 0) {
+            // Cookie header সংগ্রহ (Node/Vercel compatible)
+            const setCookieHeader = result.headers.get("set-cookie");
+            if (!setCookieHeader) {
                 console.error("Agent login: Better Auth did not return Set-Cookie");
                 return res.status(500).json({
                     success: false,
                     error: "Login session cookie could not be created",
                 });
             }
-            // Better Auth-এর session cookies Browser-এ পাঠানো
+            // Cookie browser-এ পাঠানো
+            // Multiple cookie থাকলে array হিসেবে set করতে হয়
+            const cookies = typeof setCookieHeader === "string"
+                ? setCookieHeader.split(/,(?=\s*[^;]+=)/) // multiple Set-Cookie split
+                : Array.isArray(setCookieHeader)
+                    ? setCookieHeader
+                    : [setCookieHeader];
             res.setHeader("Set-Cookie", cookies);
             return res.status(200).json({
                 success: true,
@@ -309,7 +315,6 @@ export const agentFormController = {
             });
         }
         catch (error) {
-            // ভুল password বা sign-in failure
             if (error?.status === 401 ||
                 error?.statusCode === 401 ||
                 error?.body?.code === "INVALID_EMAIL_OR_PASSWORD" ||

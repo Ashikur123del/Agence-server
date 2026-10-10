@@ -293,7 +293,6 @@ export const agentFormController = {
     },
 
     // POST /api/agents/verify  (mobile + password diye login)
-
     async verifyAgent(req: Request, res: Response) {
         try {
             const { mobileNo, password } = req.body ?? {};
@@ -312,10 +311,7 @@ export const agentFormController = {
 
             const normalizedMobile = mobileNo.replace(/\D/g, "");
 
-            const agent =
-                await agentFormService.findByMobileWithUser(
-                    normalizedMobile
-                );
+            const agent = await agentFormService.findByMobileWithUser(normalizedMobile);
 
             if (!agent) {
                 return res.status(401).json({
@@ -347,21 +343,25 @@ export const agentFormController = {
                 asResponse: true,
             });
 
-            // Better Auth-এর Set-Cookie header সংগ্রহ
-            const cookies = result.headers.getSetCookie();
+            // Cookie header সংগ্রহ (Node/Vercel compatible)
+            const setCookieHeader = result.headers.get("set-cookie");
 
-            if (cookies.length === 0) {
-                console.error(
-                    "Agent login: Better Auth did not return Set-Cookie"
-                );
-
+            if (!setCookieHeader) {
+                console.error("Agent login: Better Auth did not return Set-Cookie");
                 return res.status(500).json({
                     success: false,
                     error: "Login session cookie could not be created",
                 });
             }
 
-            // Better Auth-এর session cookies Browser-এ পাঠানো
+            // Cookie browser-এ পাঠানো
+            // Multiple cookie থাকলে array হিসেবে set করতে হয়
+            const cookies = typeof setCookieHeader === "string"
+                ? setCookieHeader.split(/,(?=\s*[^;]+=)/) // multiple Set-Cookie split
+                : Array.isArray(setCookieHeader)
+                    ? setCookieHeader
+                    : [setCookieHeader];
+
             res.setHeader("Set-Cookie", cookies);
 
             return res.status(200).json({
@@ -374,7 +374,6 @@ export const agentFormController = {
                 },
             });
         } catch (error: any) {
-            // ভুল password বা sign-in failure
             if (
                 error?.status === 401 ||
                 error?.statusCode === 401 ||
@@ -395,5 +394,4 @@ export const agentFormController = {
             });
         }
     },
-
 };
